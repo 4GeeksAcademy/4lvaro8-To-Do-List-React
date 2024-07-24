@@ -51,7 +51,6 @@ const Home = () => {
 			},
 			body: JSON.stringify({
 				"label": "task",
-				"is_done": false,
 			}),
 		})
 			.then(response => {
@@ -60,7 +59,7 @@ const Home = () => {
 				}
 				return response.json();
 			})
-			.then(data => setTask([...task, data]))
+			.then(data => {console.log(data)})
 			.catch(error => console.error("Error adding task:", error))
 	}
 
@@ -77,6 +76,10 @@ const Home = () => {
 			.catch(error => console.error("Error deleting task:", error))
 	};
 
+	const handleSubmit = (e) => {
+		e.preventDefault();
+		postData();
+	}
 
 	return (
 		<>
