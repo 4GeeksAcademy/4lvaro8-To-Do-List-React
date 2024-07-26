@@ -1,122 +1,134 @@
 import React, { useState, useEffect } from "react";
 
-
 const Home = () => {
-	const [user, setUser] = useState("");
-	const [task, setTask] = useState("");
-	const [isUserCreated, setIsUserCreated] = useState('false');
+	const [tasks, setTasks] = useState([]);
+	const [newTask, setNewTask] = useState("");
+	const [isUserCreated, setIsUserCreated] = useState(false);
 
 	const baseApiUrl = "https://playground.4geeks.com/todo";
+	const username = "4lvaro8";
 
 	useEffect(() => {
-		fetchUser("4lvaro8")
+		fetchUser();
 	}, []);
 
-
-	const fetchUser = async (user) => {
-		try {
-			const response = await fetch(`${baseApiUrl}/users/${user}`);
-			if (response.ok) {
-				const userData = await response.json();
-				return userData;
-			} else {
-				throw new Error("Failed to fetch user data");
-			}
-		} catch (error) {
-			console.log("Error fetching user data:", error);
-			return null;
-		}
-	};
-
-
-	const createUser = () => {
-		fetch('https://playground.4geeks.com/todo/users/4lvaro8', {
-			method: "POST",
+	const fetchUser = () => {
+		fetch(`${baseApiUrl}/users/${username}`, {
 			headers: {
 				"accept": "application/json",
 			},
 		})
-		.then(response => {
-			if (!response.ok) {
-				if (response.status === 400) {
-					alert("User already exists, fetching todos...");
-					setIsUserCreated(true);
-				} else {
-					throw new Error(
-						response.statusText + "! Something went wrong"
-					);
-				}
-			}
-			return response.json();
-			setIsUserCreated(true);
-		  })
-		  .then(newUser => setUser([...user, newUser]))
-		  .catch(error => console.log('Error adding user:', error));
-	}
-
-
-
-	const addTask = (user) => {
-		fetch(`${baseApiUrl}/todos/${user}`, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json"
-			},
-			body: JSON.stringify({
-				"label": "task",
-				is_done: false,
-			}),
-		})
-			.then(response => {
+			.then((response) => {
 				if (!response.ok) {
-					throw new error(response.statusText);
+					throw new Error(response.statusText);
 				}
 				return response.json();
 			})
-			.then(data => { console.log(data) })
-			.catch(error => console.error("Error adding task:", error))
-	}
-
-	function deleteTask(taskId) {
-		fetch(`${baseApiUrl}/todo/todos/${taskId}`, {
-			method: "DELETE"
-		})
-			.then(response => {
-				if (!response.ok) {
-					throw new error(response.statusText)
-				}
-				return setTask(task.filter(task => task.id !== taskId));
+			.then((data) => {
+				console.log(data);
+				setIsUserCreated(true);
 			})
-			.catch(error => console.error("Error deleting task:", error))
+			.catch((error) => console.log("Error fetching user:", error));
 	};
 
-	const handleSubmit = (e) => {
-		e.preventDefault();
-		postData();
-	}
+
+	const addTask = () => {
+		fetch(`${baseApiUrl}/todos/${username}`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				"accept": "application/json",
+			},
+			body: JSON.stringify({
+				label: newTask,
+				done: false,
+			}),
+		})
+			.then((response) => {
+				if (!response.ok) {
+					throw new Error(response.statusText);
+				}
+				return response.json();
+			})
+			.then((task) => {
+				setTasks((tasks) => [...tasks, task]);
+				setNewTask("");
+				console.log(task);
+			})
+			.catch((error) => console.log("Error adding task:", error));
+	};
+
+	const deleteTask = (taskId) => {
+		fetch(`${baseApiUrl}/todos/${taskId}`, {
+			method: "DELETE",
+			headers: {
+				"accept": "application/json",
+			},
+		})
+			.then((response) => {
+				if (!response.ok) {
+					throw new Error("Network response was not ok");
+				}
+				return response;
+			})
+			.then(() => {
+				setTasks((tasks) => tasks.filter((task) => task.id !== taskId));
+			})
+			.catch((error) => console.log("Error deleting task:", error));
+	};
+
+	const deleteAllTasks = (taskId) => {
+		fetch(`${baseApiUrl}/todos/${username}`, {
+			method: "DELETE",
+			headers: {
+				"accept": "application/json",
+			},
+		})
+			.then((response) => {
+				if (!response.ok) {
+					throw new Error("Network response was not ok");
+				}
+				response;
+				setTasks([]);
+			})
+			.then(() => {
+				setTasks((tasks) => tasks.filter((task) => task.id !== taskId));
+			})
+			.catch((error) => console.log("Error deleting all tasks:", error));
+	};
 
 	return (
-		<>
-			<div className="todo-app">
-				<div className="input-user">
-					<input type="text" className="input" value={user} placeholder="Enter the username" onChange={(e) => setUser(e.target.value)} />
-					<button className="button-user" onClick={createUser}>Create</button>
+		<div className="task-container d-flex flex-column container-fluid w-50">
+			<h1 className="title">Todo List App</h1>
+			<form
+				onSubmit={(e) => {
+					e.preventDefault();
+					addTask();
+				}}
+			>
+				<div className="input-section">
+					<input
+						type="text"
+						value={newTask}
+						onChange={(e) => { setNewTask(e.target.value) }}
+						placeholder="New task"
+					/>
+					<button className="addButton" type="submit">Add Task</button>
 				</div>
-			</div>
+			</form>
 
-			{isUserCreated &&
-				<div className="input-task">
-					<input type="text" className="input" value={task} placeholder="Enter your new task" onChange={(e) => setTask(e.target.value)} onKeyDown={(e) => {
-						if (e.key === "Enter") {
-							addTask();
-						}
-					}} />
-					<button className="button-task" onClick={addTask}>Add task</button>
-					<button className="button-fetch-task" >Get Tasks</button>
-				</div>
-			}
-		</>
-	)
-}
+			<ul>
+				{tasks.map((task) => (
+					<li key={task.id}>
+						{task.label}
+						<button className="deleteButton" onClick={() => deleteTask(task.id)}>Delete</button>
+					</li>
+				))}
+			</ul>
+
+			<button className="deleteAllButton" onClick={deleteAllTasks}>Clear All Tasks</button>
+		</div>
+	);
+};
 
 export default Home;
