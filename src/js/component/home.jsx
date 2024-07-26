@@ -77,28 +77,31 @@ const Home = () => {
 			.catch((error) => console.log("Error deleting task:", error));
 	};
 
-	const deleteAllTasks = (taskId) => {
-		fetch(`${baseApiUrl}/todos/${username}`, {
+	const deleteAllTasks = () => {
+		const deletePromises = tasks.map((task) =>
+		  fetch(`https://playground.4geeks.com/todo/todos/${task.id}`, {
 			method: "DELETE",
 			headers: {
-				"accept": "application/json",
+			  "accept": "application/json",
 			},
-		})
-			.then((response) => {
-				if (!response.ok) {
-					throw new Error("Network response was not ok");
-				}
-				response;
-				setTasks([]);
-			})
-			.then(() => {
-				setTasks((tasks) => tasks.filter((task) => task.id !== taskId));
-			})
-			.catch((error) => console.log("Error deleting all tasks:", error));
-	};
+		  })
+		);
+	
+		Promise.all(deletePromises)
+		  .then((responses) => {
+			const ok = responses.every((response) => response.ok);
+			if (ok) {
+			  setTasks([]);
+			} else {
+			  throw new error(responses.statusText);
+			}
+		  })
+		  .catch((error) => console.log("Error:", error));
+	  };
+
 
 	return (
-		<div className="task-container d-flex flex-column container-fluid w-50">
+		isUserCreated ? <div className="task-container d-flex flex-column container-fluid w-50">
 			<h1 className="title">Todo List App</h1>
 			<form
 				onSubmit={(e) => {
@@ -127,7 +130,7 @@ const Home = () => {
 			</ul>
 
 			<button className="deleteAllButton" onClick={deleteAllTasks}>Clear All Tasks</button>
-		</div>
+		</div> : ""
 	);
 };
 
